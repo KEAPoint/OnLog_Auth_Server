@@ -1,4 +1,4 @@
-package com.service.ttucktak.utils;
+package keapoint.onlog.auth.utils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

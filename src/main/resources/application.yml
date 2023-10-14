@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    import: classpath:secret.yml
+
+  activate:
+    on-profile: dev
+
+  application:
+    name: OnlogAuthServer
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+    properties:
+      hibernate:
+        format_sql: true
+
+    show-sql: true

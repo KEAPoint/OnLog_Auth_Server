@@ -1,27 +1,24 @@
-package com.service.ttucktak.utils;
+package keapoint.onlog.auth.utils;
 
-import com.service.ttucktak.base.BaseErrorCode;
-import com.service.ttucktak.base.BaseException;
-import com.service.ttucktak.config.security.CustomHttpHeaders;
-import com.service.ttucktak.dto.auth.TokensDto;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
+import keapoint.onlog.auth.base.BaseErrorCode;
+import keapoint.onlog.auth.base.BaseException;
+import keapoint.onlog.auth.dto.TokensDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,10 +40,11 @@ public class JwtUtil {
     }
 
     /**
-     * create accessToken and refreshToken
+     * accessToken과 refreshToken 생성
+     *
      * @param authentication
      * @return TokensDto
-     * */
+     */
     public TokensDto createTokens(Authentication authentication, UUID memberIdx, String password) throws Exception {
         Key key = Keys.hmacShaKeyFor(jwtKey.getBytes());
 
@@ -58,7 +56,7 @@ public class JwtUtil {
         long validLength = 1000L * 60 * 60 * 24 * 7;
         Date expireDate = new Date(System.currentTimeMillis() + validLength);
 
-        String accessToken =  Jwts.builder()
+        String accessToken = Jwts.builder()
                 .setHeaderParam("type", "jwt")
                 .setSubject(authentication.getName())
                 .claim("auth", authorities)
@@ -80,46 +78,48 @@ public class JwtUtil {
 
 
     /**
-     * Extract user info from access token
-     * @param token
+     * access token에서 사용자의 정보 추출
+     *
+     * @param token access token
      * @return UsernamePasswordAuthenticationToken
-     * */
+     */
     public Authentication getAuthentication(String token) throws BaseException {
         Jws<Claims> claimsJws;
 
-        try{
+        try {
             claimsJws = Jwts.parserBuilder()
                     .setSigningKey(jwtKey.getBytes()).build()
                     .parseClaimsJws(token);
 
-        } catch(Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
             log.error(exception.getMessage());
-            throw new BaseException(BaseErrorCode.INVALID_JWT_TOKEN);
+            throw new BaseException(BaseErrorCode.TOKEN_DECODING_EXCEPTION);
         }
 
         // 인증 정보 받아오기
         Collection<? extends GrantedAuthority> authorities =
-                //Jwt token 에서 auth 필드에대한 스트림을 열어서 ,로 스플릿 한다음에 SimpleGrantedAuthority 로 매핑해서 리스트로 반환
+                // Jwt token 에서 auth 필드에대한 스트림을 열어서 ,로 split 한다음에 SimpleGrantedAuthority 로 매핑해서 리스트로 반환
                 Arrays.stream(claimsJws.getBody().get("auth").toString().split(","))
-                .map(SimpleGrantedAuthority::new) .toList();
+                        .map(SimpleGrantedAuthority::new).toList();
 
         UserDetails principal = new User(claimsJws.getBody().getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
     /**
-     * Check access token valid
-     * @param token
+     * access token 유효성 검사
+     *
+     * @param token access token
      * @return boolean (true: valid, false: invalid)
-     * */
-    public boolean checkToken(String token){
+     */
+    public boolean checkToken(String token) {
         Key key = Keys.hmacShaKeyFor(jwtKey.getBytes());
 
-        try{
+        try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        }catch (Exception exception){
+        } catch (Exception exception) {
             log.info("invalid JWT Token" + exception.getMessage());
         }
 
@@ -127,12 +127,16 @@ public class JwtUtil {
     }
 
     /**
-     * Check Refresh Token valid
-     * */
-    public String checkRefreshToken(String refreshToken) throws BaseException{
+     * refresh token 유효성 검사
+     *
+     * @param refreshToken
+     * @return
+     * @throws BaseException
+     */
+    public String checkRefreshToken(String refreshToken) throws BaseException {
         Jws<Claims> claims;
 
-        try{
+        try {
             log.info(String.valueOf(refreshToken));
             claims = Jwts.parserBuilder()
                     .setSigningKey(jwtKey.getBytes())
@@ -142,13 +146,13 @@ public class JwtUtil {
             Date expired = claims.getBody().getExpiration();
             Date now = new Date();
 
-            if(!expired.after(now)) throw new RuntimeException();
+            if (!expired.after(now)) throw new RuntimeException();
 
             return aes256.decrypt(claims.getBody().get("password").toString());
 
-        }catch (Exception exception){
+        } catch (Exception exception) {
             log.error(exception.getMessage());
-            throw new BaseException(BaseErrorCode.REFRESH_EXPIRED);
+            throw new BaseException(BaseErrorCode.TOKEN_EXPIRED_EXCEPTION);
         }
     }
 

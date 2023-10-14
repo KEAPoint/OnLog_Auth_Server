@@ -1,4 +1,4 @@
-package com.service.ttucktak.config.security;
+package keapoint.onlog.auth.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * JWT 필요 없는 API 시큐리티 체인
- * @author LEE JIHO
  * */
 @EnableWebSecurity(debug = true)
 @Configuration
@@ -21,7 +20,7 @@ public class IgnoreSecurityConfig {
     public SecurityFilterChain IgnoreFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)// 토큰으로 인증하므로 stateless
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 토큰으로 인증하므로 stateless
                 .and()
                 .headers().frameOptions().disable()
                 .and()
@@ -31,23 +30,9 @@ public class IgnoreSecurityConfig {
                 .csrf().disable()// HTTP Basic Authentication 을 사용하지 않음
                 .cors().disable()
                 .authorizeHttpRequests() //Http Request를 인가하라
-                .requestMatchers("/api/auths/signup").permitAll()
-                .requestMatchers("/api/auths/login").permitAll()
-                .requestMatchers("/api/auths/email-confirm").permitAll()
-                .requestMatchers("/api/auths/oauth2/kakao").permitAll()
-                .requestMatchers("/api/auths/oauth2/kakao/test").permitAll()
-                .requestMatchers("/api/auths/oauth2/login/kakao").permitAll()
-                .requestMatchers("/api/auths/oauth2/google").permitAll()
-                .requestMatchers("/api/auths/oauth2/login/google").permitAll()
-                .requestMatchers("/api/members/nickname/**").permitAll()
-                .requestMatchers("/oauth2/authorization/kakao").permitAll()
+                .requestMatchers("/auth/kakao/callback").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/index.html").permitAll()
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/page/leafs/**").permitAll()
-                .requestMatchers("/api/members/password/lost").permitAll()
-                .requestMatchers("/api/members/password/email").permitAll()
-                .requestMatchers("/api/auths/token/refresh").permitAll()
                 .anyRequest().permitAll();
 
         return http.build();
