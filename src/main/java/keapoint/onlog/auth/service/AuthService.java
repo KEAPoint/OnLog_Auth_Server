@@ -9,7 +9,7 @@ import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.dto.TokensDto;
 import keapoint.onlog.auth.entity.Member;
 import keapoint.onlog.auth.repository.MemberRepository;
-import keapoint.onlog.auth.utils.JwtUtil;
+import keapoint.onlog.auth.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
 
     private final MemberRepository memberRepository;
 
@@ -193,7 +193,7 @@ public class AuthService {
     public TokensDto generateToken(Object principal, Object credentials, UUID memberIdx, String password) throws Exception {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(principal, credentials);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        return jwtUtil.createTokens(authentication, memberIdx, password);
+        return jwtTokenProvider.createTokens(authentication, memberIdx, password);
     }
 
     /**

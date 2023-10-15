@@ -28,14 +28,14 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class JwtUtil {
+public class JwtTokenProvider {
     @Value("${jwt.secret-key}")
     private String jwtKey;
 
     private AES256 aes256;
 
     @Autowired
-    public JwtUtil(AES256 aes256) {
+    public JwtTokenProvider(AES256 aes256) {
         this.aes256 = aes256;
     }
 
@@ -53,8 +53,7 @@ public class JwtUtil {
                 .collect(Collectors.joining(","));
 
         Date now = new Date();
-        long validLength = 1000L * 60 * 60 * 24 * 7;
-        Date expireDate = new Date(System.currentTimeMillis() + validLength);
+        long oneDay = 1000L * 60 * 60 * 24;
 
         String accessToken = Jwts.builder()
                 .setHeaderParam("type", "jwt")
@@ -62,13 +61,13 @@ public class JwtUtil {
                 .claim("auth", authorities)
                 .claim("memberIdx", memberIdx.toString())
                 .setIssuedAt(now)
-                .setExpiration(expireDate)
+                .setExpiration(new Date(System.currentTimeMillis() + oneDay * 7))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
 
         String refreshToken = Jwts.builder()
                 .setIssuedAt(now)
-                .setExpiration(expireDate)
+                .setExpiration(new Date(System.currentTimeMillis() + oneDay * 7))
                 .claim("password", aes256.encrypt(password))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
@@ -113,7 +112,7 @@ public class JwtUtil {
      * @param token access token
      * @return boolean (true: valid, false: invalid)
      */
-    public boolean checkToken(String token) {
+    public boolean vallidateToken(String token) {
         Key key = Keys.hmacShaKeyFor(jwtKey.getBytes());
 
         try {
@@ -133,7 +132,7 @@ public class JwtUtil {
      * @return
      * @throws BaseException
      */
-    public String checkRefreshToken(String refreshToken) throws BaseException {
+    public String vallidateRefreshToken(String refreshToken) throws BaseException {
         Jws<Claims> claims;
 
         try {
