@@ -1,5 +1,8 @@
 package keapoint.onlog.auth.service;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import keapoint.onlog.auth.base.AccountType;
 import keapoint.onlog.auth.base.BaseErrorCode;
 import keapoint.onlog.auth.base.BaseException;
@@ -44,8 +47,6 @@ public class AuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId; // Rest Api Key
 
-    private static final String KAKAO_API_URL = "https://kauth.kakao.com"; // 카카오 기본 url
-
     /**
      * 카카오 인가 코드로 카카오 access token 발급받기
      *
@@ -58,8 +59,8 @@ public class AuthService {
             // webClient 설정
             WebClient kakaoWebClient =
                     WebClient.builder()
-                            .baseUrl(KAKAO_API_URL)
-                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                            .baseUrl("https://kauth.kakao.com/oauth/token")
+                            .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded;charset=utf-8")
                             .build();
 
             // token api 호출
@@ -67,7 +68,6 @@ public class AuthService {
                     kakaoWebClient
                             .post()
                             .uri(uriBuilder -> uriBuilder
-                                    .path("/oauth/token")
                                     .queryParam("grant_type", "authorization_code")
                                     .queryParam("client_id", clientId)
                                     .queryParam("code", authCode)
@@ -96,33 +96,35 @@ public class AuthService {
             // webClient 설정
             WebClient kakaoApiWebClient =
                     WebClient.builder()
-                            .baseUrl(KAKAO_API_URL)
-                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                            .baseUrl("https://kapi.kakao.com/v2/user/me")
+                            .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded;charset=utf-8")
                             .build();
 
-            Map infoResponse =
+            String response =
                     kakaoApiWebClient
                             .post()
-                            .uri(uriBuilder -> uriBuilder
-                                    .path("/v2/user/me")
-                                    .build())
                             .header("Authorization", "Bearer " + accessToken)
                             .retrieve()
-                            .bodyToMono(Map.class)
+                            .bodyToMono(String.class)
                             .block();
 
-            log.info("User Information Request Results : " + infoResponse.toString());
+            log.info("User Information Request Results : " + response);
 
-            Map<String, Object> kakaoAccountMap = (Map<String, Object>) infoResponse.get("kakao_account");
-            Map<String, String> profileMap = (Map<String, String>) kakaoAccountMap.get("profile");
+            JsonObject kakaoProfile = JsonParser.parseString(response)
+                    .getAsJsonObject()
+                    .get("kakao_account")
+                    .getAsJsonObject()
+                    .get("profile")
+                    .getAsJsonObject();
 
             // 닉네임 정보 담기
-            String username = profileMap.get("nickname");
+            String username = kakaoProfile.get("nickname")
+                    .getAsString();
 
             // 이메일 정보 담기
             String email;
-            if ("true".equals(kakaoAccountMap.get("has_email").toString())) {
-                email = kakaoAccountMap.get("email").toString();
+            if (kakaoProfile.get("has_email").getAsBoolean()) {
+                email = kakaoProfile.get("email").getAsString();
 
             } else { // 이메일이 없는 경우 Exception. 이메일이 사용자의 식별자로 사용되고 있기 때문에 무조건 필요함
                 throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
