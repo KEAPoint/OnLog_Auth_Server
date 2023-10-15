@@ -136,7 +136,7 @@ public class AuthService {
 
         } catch (Exception exception) {
             log.error("Exception in get Kakao user info : " + exception.getMessage());
-            throw new BaseException(BaseErrorCode.Internal_Server_Error);
+            throw new BaseException(BaseErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -176,7 +176,7 @@ public class AuthService {
 
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BaseException(BaseErrorCode.Internal_Server_Error);
+            throw new BaseException(BaseErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -222,7 +222,7 @@ public class AuthService {
 
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new BaseException(BaseErrorCode.Internal_Server_Error);
+            throw new BaseException(BaseErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
