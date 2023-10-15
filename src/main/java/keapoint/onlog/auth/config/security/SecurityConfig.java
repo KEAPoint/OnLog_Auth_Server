@@ -10,13 +10,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,13 +34,12 @@ public class SecurityConfig {
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // formLogin 대신 Jwt를 사용하기 때문에 disable로 설정
                 .logout(AbstractHttpConfigurer::disable) // 로그아웃 기능 비활성화.
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("auth/kakao/login").permitAll() // "/auth/kakao/login" 경로에 대한 요청은 인증 없이 허용
-                                .requestMatchers("/v3/api-docs/**").permitAll() // Swagger는 인증 없이 허용
-                                .requestMatchers("/swagger-ui/**").permitAll() // Swagger는 인증 없이 허용
-                                .requestMatchers("/auth/logout").authenticated()  // "/auth/logout" 경로에 대한 요청은 인증 필요
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("auth/kakao/login").permitAll() // "/auth/kakao/login" 경로에 대한 요청은 인증 없이 허용
+                        .requestMatchers("auth/logout").permitAll() // "/auth/logout" 경로에 대한 요청은 인증 없이 허용
+                        .requestMatchers("/v3/api-docs/**").permitAll() // Swagger는 인증 없이 허용
+                        .requestMatchers("/swagger-ui/**").permitAll() // Swagger는 인증 없이 허용
+                );
 
         return http.build();
     }
