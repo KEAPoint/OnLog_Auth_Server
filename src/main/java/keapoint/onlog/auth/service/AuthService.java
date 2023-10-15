@@ -205,9 +205,14 @@ public class AuthService {
      */
     public BaseResponse<PostLogoutRes> logout(String refreshToken) throws BaseException {
         try {
-            memberRepository.findByRefreshToken(refreshToken).
-                    orElseThrow(() -> new BaseException(BaseErrorCode.USER_NOT_FOUND_EXCEPTION))
-                    .invalidateRefreshToken();
+            Member member = memberRepository.findByRefreshToken(refreshToken).
+                    orElseThrow(() -> new BaseException(BaseErrorCode.USER_NOT_FOUND_EXCEPTION));
+
+            // 사용자의 refresh token 파기
+            member.invalidateRefreshToken();
+
+            // 로깅
+            log.info("사용자 (" + member.getEmail() + ")의 refresh token 파기 완료");
 
             return new BaseResponse<>(new PostLogoutRes(true));
 

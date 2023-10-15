@@ -55,6 +55,7 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public BaseResponse<PostLogoutRes> userLogout(@RequestHeader("Authorization") String token) throws Exception {
+        log.info("logout token(" + token +")");
         return authService.logout(extractToken(token));
     }
 
@@ -68,6 +69,7 @@ public class AuthController {
         String[] parsedToken = token.split(" ");
 
         if (parsedToken[0].equalsIgnoreCase("Bearer")) { // Bearer 시작 형식인지 확인
+            log.info("parsed token: " + token);
             return parsedToken[1]; // "Bearer " 부분을 제외한 실제 토큰 문자열 반환
         }
 
