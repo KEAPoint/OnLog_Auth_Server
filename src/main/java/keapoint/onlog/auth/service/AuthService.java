@@ -199,19 +199,23 @@ public class AuthService {
     /**
      * 사용자 로그아웃
      *
-     * @param refreshToken 사용자 Refresh token
+     * @param token 사용자 token
      * @return 사용자 식별자
      * @throws Exception
      */
-    public BaseResponse<PostLogoutRes> logout(String refreshToken) throws BaseException {
+    public BaseResponse<PostLogoutRes> logout(String token) throws BaseException {
         try {
-            Member member = memberRepository.findByRefreshToken(refreshToken).
+            // 사용자의 식별자 추출
+            String memberIdx = jwtTokenProvider.extractIdx(token);
+            log.info("로그아웃 하는 사용자의 식별자: " + memberIdx);
+
+            // 사용자 정보 가져오기
+            Member member = memberRepository.findById(UUID.fromString(memberIdx)).
                     orElseThrow(() -> new BaseException(BaseErrorCode.USER_NOT_FOUND_EXCEPTION));
+            log.info("로그아웃 하는 사용자 정보: " + member.toString());
 
             // 사용자의 refresh token 파기
             member.invalidateRefreshToken();
-
-            // 로깅
             log.info("사용자 (" + member.getEmail() + ")의 refresh token 파기 완료");
 
             return new BaseResponse<>(new PostLogoutRes(true));

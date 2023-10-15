@@ -75,6 +75,21 @@ public class JwtTokenProvider {
         return new TokensDto("Bearer", accessToken, refreshToken);
     }
 
+    /**
+     * 사용자의 식별자를 추출하는 method
+     *
+     * @param token 사용자 token
+     * @return 사용자 식별자
+     */
+    public String extractIdx(String token) {
+        Jws<Claims> claimsJws = Jwts.parserBuilder()
+                .setSigningKey(jwtKey.getBytes())
+                .build()
+                .parseClaimsJws(token);
+
+        return claimsJws.getBody().get("memberIdx", String.class);
+    }
+
 
     /**
      * access token에서 사용자의 정보 추출
