@@ -69,7 +69,7 @@ public class AuthController {
         String[] parsedToken = token.split(" ");
 
         if (parsedToken[0].equalsIgnoreCase("Bearer")) { // Bearer 시작 형식인지 확인
-            log.info("parsed token: " + token);
+            log.info("parsed token: " + parsedToken[1]);
             return parsedToken[1]; // "Bearer " 부분을 제외한 실제 토큰 문자열 반환
         }
 
