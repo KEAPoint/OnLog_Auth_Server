@@ -1,7 +1,5 @@
 package keapoint.onlog.auth.service;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import keapoint.onlog.auth.base.AccountType;
 import keapoint.onlog.auth.base.BaseErrorCode;
 import keapoint.onlog.auth.base.BaseException;
@@ -15,17 +13,18 @@ import keapoint.onlog.auth.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -42,6 +41,11 @@ public class AuthService {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
+    @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    private String clientId; // Rest Api Key
+
+    private static final String KAKAO_API_URL = "https://kauth.kakao.com"; // 카카오 기본 url
+
     /**
      * 카카오 인가 코드로 카카오 access token 발급받기
      *
@@ -51,41 +55,28 @@ public class AuthService {
      */
     public String getKakaoAccessToken(String authCode) throws Exception {
         try {
-            log.info("kakao auth code" + authCode);
+            // webClient 설정
+            WebClient kakaoWebClient =
+                    WebClient.builder()
+                            .baseUrl(KAKAO_API_URL)
+                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                            .build();
 
-            // GET 요청을 보낼 URL
-            String url = "https://kauth.kakao.com/oauth/token";
+            // token api 호출
+            Map<String, Object> tokenResponse =
+                    kakaoWebClient
+                            .post()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/oauth/token")
+                                    .queryParam("grant_type", "authorization_code")
+                                    .queryParam("client_id", clientId)
+                                    .queryParam("code", authCode)
+                                    .build())
+                            .retrieve()
+                            .bodyToMono(Map.class)
+                            .block();
 
-            // URL 객체 생성
-            URL obj = new URL(url);
-
-            // HttpURLConnection 객체 생성 및 설정
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("GET");
-
-            // 응답 코드 확인
-            int responseCode = con.getResponseCode();
-            log.info("Response Code at Kakao access token: " + responseCode);
-
-            // 응답 데이터 읽기
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder response = new StringBuilder();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
-
-            // 카카오 access token 추출
-            String accessToken = JsonParser.parseString(response.toString())
-                    .getAsJsonObject()
-                    .get("access_token")
-                    .getAsString();
-
-            log.info("Kakao access token: " + accessToken);
-
-            return accessToken;
+            return (String) tokenResponse.get("access_token");
 
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -102,62 +93,45 @@ public class AuthService {
      */
     public SocialAccountUserInfo getKakaoUserInfo(String accessToken) throws BaseException {
         try {
-            // 카카오 정보를 요청할 URL
-            String url = "https://kapi.kakao.com/v2/user/me";
+            // webClient 설정
+            WebClient kakaoApiWebClient =
+                    WebClient.builder()
+                            .baseUrl(KAKAO_API_URL)
+                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                            .build();
 
-            // URL 객체 생성
-            URL obj = new URL(url);
+            Map infoResponse =
+                    kakaoApiWebClient
+                            .post()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/v2/user/me")
+                                    .build())
+                            .header("Authorization", "Bearer " + accessToken)
+                            .retrieve()
+                            .bodyToMono(Map.class)
+                            .block();
 
-            // HttpURLConnection 객체 생성 및 설정
-            HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
-            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-            conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+            log.info("User Information Request Results : " + infoResponse.toString());
 
-            // 응답 코드 확인
-            int responseCode = conn.getResponseCode();
-            log.info("Response Code at Kakao user info : " + responseCode);
+            Map<String, Object> kakaoAccountMap = (Map<String, Object>) infoResponse.get("kakao_account");
+            Map<String, String> profileMap = (Map<String, String>) kakaoAccountMap.get("profile");
 
-            // 응답 데이터 읽기
-            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String line;
-            StringBuilder result = new StringBuilder();
+            // 닉네임 정보 담기
+            String username = profileMap.get("nickname");
 
-            while ((line = br.readLine()) != null) {
-                result.append(line);
+            // 이메일 정보 담기
+            String email;
+            if ("true".equals(kakaoAccountMap.get("has_email").toString())) {
+                email = kakaoAccountMap.get("email").toString();
+
+            } else { // 이메일이 없는 경우 Exception. 이메일이 사용자의 식별자로 사용되고 있기 때문에 무조건 필요함
+                throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
             }
 
-            // JsonObject로 형 변환
-            JsonObject object = JsonParser.parseString(result.toString())
-                    .getAsJsonObject();
-
-            // 이메일 있는지 여부
-            boolean hasEmail = object.get("kakao_account")
-                    .getAsJsonObject()
-                    .get("has_email")
-                    .getAsBoolean();
-
-            // 이메일이 없는 경우 Exception
-            // 이메일이 사용자의 식별자로 사용되고 있기 때문에 무조건 필요함
-            if (!hasEmail) throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
-
-            // 사용자의 이메일 추출
-            String email = object.get("kakao_account").getAsJsonObject().get("email").getAsString();
-
-            // 사용자의 이름 추출
-            String name = object.get("kakao_account")
-                    .getAsJsonObject().get("profile")
-                    .getAsJsonObject().get("nickname").getAsString();
-
-            SocialAccountUserInfo user = SocialAccountUserInfo.builder()
-                    .userName(name)
+            return SocialAccountUserInfo.builder()
+                    .userName(username)
                     .userEmail(email)
                     .build();
-
-            log.info(user.toString());
-
-            return user;
 
         } catch (BaseException exception) {
             throw exception;
