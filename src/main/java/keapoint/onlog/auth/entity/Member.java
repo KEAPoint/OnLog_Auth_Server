@@ -45,7 +45,7 @@ public class Member {
     @Column(name = "agree_promotion", nullable = false)
     private boolean agreePromotion;
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
     @Column(nullable = false)
@@ -74,7 +74,7 @@ public class Member {
 
     /**
      * 사용자의 refresh token 갱신
-     * @param refreshToken
+     * @param refreshToken 리프레시 토큰
      */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
