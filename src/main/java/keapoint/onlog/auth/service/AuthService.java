@@ -1,6 +1,5 @@
 package keapoint.onlog.auth.service;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import keapoint.onlog.auth.base.AccountType;
@@ -10,15 +9,14 @@ import keapoint.onlog.auth.base.Role;
 import keapoint.onlog.auth.dto.PostLoginRes;
 import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.dto.TokensDto;
-import keapoint.onlog.auth.entity.User;
-import keapoint.onlog.auth.repository.UserRepository;
+import keapoint.onlog.auth.entity.Member;
+import keapoint.onlog.auth.repository.MemberRepository;
 import keapoint.onlog.auth.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -38,7 +36,7 @@ public class AuthService {
 
     private final JwtUtil jwtUtil;
 
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -151,12 +149,12 @@ public class AuthService {
         try {
             // 이메일을 기반으로 사용자를 조회한다
             // 만약 조회된 결과가 없으면 사용자를 생성하고 DB에 저장한다
-            User user = userRepository.findByUserEmail(data.getUserEmail())
+            Member member = memberRepository.findByEmail(data.getUserEmail())
                     .orElseGet(() -> {
-                        User newUser = User.builder()
-                                .userEmail(data.getUserEmail())
-                                .userPassword(passwordEncoder.encode(data.getUserEmail()))
-                                .userPhoneNumber(null)
+                        Member newMember = Member.builder()
+                                .email(data.getUserEmail())
+                                .password(passwordEncoder.encode(data.getUserEmail()))
+                                .phoneNumber(null)
                                 .agreePersonalInfo(false)
                                 .agreePromotion(false)
                                 .refreshToken(null)
@@ -165,18 +163,18 @@ public class AuthService {
                                 .userName(data.getUserName())
                                 .build();
 
-                        return userRepository.save(newUser);
+                        return memberRepository.save(newMember);
                     });
 
             // --- 로그인 처리 ---
             // 토큰을 발급받고, refresh token을 DB에 저장한다.
-            TokensDto token = generateToken(user.getUserEmail(), user.getUserPassword(), user.getUserIdx(), user.getUserEmail());
-            user.updateRefreshToken(token.getRefreshToken());
+            TokensDto token = generateToken(member.getEmail(), member.getEmail(), member.getMemberIdx(), member.getPassword());
+            member.updateRefreshToken(token.getRefreshToken());
 
             // 사용자 정보 로깅
-            log.info(user.toString());
+            log.info(member.toString());
 
-            return new PostLoginRes(user.getUserIdx(), token);
+            return new PostLoginRes(member.getMemberIdx(), token);
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -187,17 +185,17 @@ public class AuthService {
     /**
      * 토큰 발행
      *
-     * @param principal
-     * @param credentials
-     * @param userIdx
-     * @param password
+     * @param principal 로그인 시도 아이디
+     * @param credentials 로그인 시도 비밀번호
+     * @param memberIdx 사용자 식별자
+     * @param password 사용자 비밀번호
      * @return 토큰이 들어있는 객체
      * @throws Exception
      */
-    public TokensDto generateToken(Object principal, Object credentials, UUID userIdx, String password) throws Exception {
+    public TokensDto generateToken(Object principal, Object credentials, UUID memberIdx, String password) throws Exception {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(principal, credentials);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        return jwtUtil.createTokens(authentication, userIdx, password);
+        return jwtUtil.createTokens(authentication, memberIdx, password);
     }
 
 }

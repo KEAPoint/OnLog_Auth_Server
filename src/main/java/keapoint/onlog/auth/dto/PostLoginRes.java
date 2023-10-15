@@ -11,7 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostLoginRes {
-    @Schema(name = "userIdx", example = "01234567-8910-abcd-efgh-ijklmnopqrst", requiredProperties = "true", description = "사용자 식별자")
-    private UUID userIdx;
+    @Schema(name = "memberIdx", example = "01234567-8910-abcd-efgh-ijklmnopqrst", requiredProperties = "true", description = "사용자 식별자")
+    private UUID memberIdx;
     private TokensDto tokenInfo;
 }

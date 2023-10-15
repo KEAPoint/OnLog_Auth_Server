@@ -15,22 +15,21 @@ import java.util.UUID;
 @Data
 @Entity
 @NoArgsConstructor
-@Table(name = "user")
-public class User {
+@Table(name = "member")
+public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "user_idx", nullable = false)
-    private UUID userIdx;
+    @Column(name = "member_idx", nullable = false)
+    private UUID memberIdx;
 
     @Column(name = "email", length = 40, nullable = false, unique = true)
-    private String userEmail;
+    private String email;
 
-    @Column(name = "password")
-    private String userPassword;
+    private String password;
 
     @Column(name = "phone_number", length = 15)
-    private String userPhoneNumber;
+    private String phoneNumber;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -61,12 +60,10 @@ public class User {
     private String userName;
 
     @Builder
-    public User(String userEmail, String userPassword, String userPhoneNumber, LocalDateTime createdAt, LocalDateTime updatedAt, boolean agreePersonalInfo, boolean agreePromotion, String refreshToken, Role role, AccountType accountType, String userName) {
-        this.userEmail = userEmail;
-        this.userPassword = userPassword;
-        this.userPhoneNumber = userPhoneNumber;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    public Member(String email, String password, String phoneNumber, boolean agreePersonalInfo, boolean agreePromotion, String refreshToken, Role role, AccountType accountType, String userName) {
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
         this.agreePersonalInfo = agreePersonalInfo;
         this.agreePromotion = agreePromotion;
         this.refreshToken = refreshToken;
