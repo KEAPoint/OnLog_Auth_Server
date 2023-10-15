@@ -113,6 +113,7 @@ public class AuthService {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+            conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
             // 응답 코드 확인
             int responseCode = conn.getResponseCode();
