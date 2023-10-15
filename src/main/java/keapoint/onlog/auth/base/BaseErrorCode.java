@@ -23,7 +23,8 @@ public enum BaseErrorCode {
     /**
      * 500 : INTERNAL SERVER ERROR
      */
-    Internal_Server_Error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "처리 중에 오류가 발생하였습니다.");
+    Internal_Server_Error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "처리 중에 오류가 발생하였습니다."),
+    UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "예상치 못한 에러가 발생하였습니다.");
 
     private final Integer status;
     private final String message;
