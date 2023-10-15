@@ -110,21 +110,21 @@ public class AuthService {
 
             log.info("User Information Request Results : " + response);
 
-            JsonObject kakaoProfile = JsonParser.parseString(response)
+            JsonObject kakaoAccount = JsonParser.parseString(response)
                     .getAsJsonObject()
                     .get("kakao_account")
-                    .getAsJsonObject()
-                    .get("profile")
                     .getAsJsonObject();
 
             // 닉네임 정보 담기
-            String username = kakaoProfile.get("nickname")
+            String username = kakaoAccount.get("profile")
+                    .getAsJsonObject()
+                    .get("nickname")
                     .getAsString();
 
             // 이메일 정보 담기
             String email;
-            if (kakaoProfile.get("has_email").getAsBoolean()) {
-                email = kakaoProfile.get("email").getAsString();
+            if (kakaoAccount.get("has_email").getAsBoolean()) {
+                email = kakaoAccount.get("email").getAsString();
 
             } else { // 이메일이 없는 경우 Exception. 이메일이 사용자의 식별자로 사용되고 있기 때문에 무조건 필요함
                 throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
