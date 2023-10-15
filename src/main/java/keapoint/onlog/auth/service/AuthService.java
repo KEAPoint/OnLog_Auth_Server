@@ -143,7 +143,7 @@ public class AuthService {
     /**
      * 로그인 - 소셜 계정
      */
-    public PostLoginRes loginWithSocialAccount(SocialAccountUserInfo data, AccountType type) throws BaseException {
+    public BaseResponse<PostLoginRes> loginWithSocialAccount(SocialAccountUserInfo data, AccountType type) throws BaseException {
         try {
             // 이메일을 기반으로 사용자를 조회한다
             // 만약 조회된 결과가 없으면 사용자를 생성하고 DB에 저장한다
@@ -172,7 +172,7 @@ public class AuthService {
             // 사용자 정보 로깅
             log.info(member.toString());
 
-            return new PostLoginRes(member.getMemberIdx(), token);
+            return new BaseResponse<>(new PostLoginRes(member.getMemberIdx(), token));
 
         } catch (Exception e) {
             log.error(e.getMessage());

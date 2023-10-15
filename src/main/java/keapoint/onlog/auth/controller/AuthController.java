@@ -43,7 +43,7 @@ public class AuthController {
         log.info("user = " + data.toString());
 
         // 서비스에 로그인 후 응답 반환
-        return new BaseResponse<>(authService.loginWithSocialAccount(data, AccountType.KAKAO));
+        return authService.loginWithSocialAccount(data, AccountType.KAKAO);
     }
 
     /**
