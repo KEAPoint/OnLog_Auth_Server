@@ -2,11 +2,9 @@ package keapoint.onlog.auth.service;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import keapoint.onlog.auth.base.AccountType;
-import keapoint.onlog.auth.base.BaseErrorCode;
-import keapoint.onlog.auth.base.BaseException;
-import keapoint.onlog.auth.base.Role;
+import keapoint.onlog.auth.base.*;
 import keapoint.onlog.auth.dto.PostLoginRes;
+import keapoint.onlog.auth.dto.PostLogoutRes;
 import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.dto.TokensDto;
 import keapoint.onlog.auth.entity.Member;
@@ -185,10 +183,10 @@ public class AuthService {
     /**
      * 토큰 발행
      *
-     * @param principal 로그인 시도 아이디
+     * @param principal   로그인 시도 아이디
      * @param credentials 로그인 시도 비밀번호
-     * @param memberIdx 사용자 식별자
-     * @param password 사용자 비밀번호
+     * @param memberIdx   사용자 식별자
+     * @param password    사용자 비밀번호
      * @return 토큰이 들어있는 객체
      * @throws Exception
      */
@@ -196,6 +194,27 @@ public class AuthService {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(principal, credentials);
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         return jwtUtil.createTokens(authentication, memberIdx, password);
+    }
+
+    /**
+     * 사용자 로그아웃
+     *
+     * @param refreshToken 사용자 Refresh token
+     * @return 사용자 식별자
+     * @throws Exception
+     */
+    public BaseResponse<PostLogoutRes> logout(String refreshToken) throws BaseException {
+        try {
+            memberRepository.findByRefreshToken(refreshToken).
+                    orElseThrow(() -> new BaseException(BaseErrorCode.USER_NOT_FOUND_EXCEPTION))
+                    .invalidateRefreshToken();
+
+            return new BaseResponse<>(new PostLogoutRes(true));
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new BaseException(BaseErrorCode.Internal_Server_Error);
+        }
     }
 
 }

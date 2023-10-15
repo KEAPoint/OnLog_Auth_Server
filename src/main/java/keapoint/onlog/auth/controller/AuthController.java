@@ -3,6 +3,7 @@ package keapoint.onlog.auth.controller;
 import keapoint.onlog.auth.base.AccountType;
 import keapoint.onlog.auth.base.BaseResponse;
 import keapoint.onlog.auth.dto.PostLoginRes;
+import keapoint.onlog.auth.dto.PostLogoutRes;
 import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,5 +44,33 @@ public class AuthController {
 
         // 서비스에 로그인 후 응답 반환
         return new BaseResponse<>(authService.loginWithSocialAccount(data, AccountType.KAKAO));
+    }
+
+    /**
+     * 로그아웃
+     *
+     * @param token 사용자 refresh token
+     * @return 성공 여부가 들어있는 객체
+     * @throws Exception
+     */
+    @PostMapping("/logout")
+    public BaseResponse<PostLogoutRes> userLogout(@RequestHeader("Authorization") String token) throws Exception {
+        return authService.logout(extractToken(token));
+    }
+
+    /**
+     * 토큰 추출하는 메소드
+     *
+     * @param token 사용자 token
+     * @return token 문자열 또는 null (추출 실패 시)
+     */
+    private String extractToken(String token) {
+        String[] parsedToken = token.split(" ");
+
+        if (parsedToken[0].equalsIgnoreCase("Bearer")) { // Bearer 시작 형식인지 확인
+            return parsedToken[1]; // "Bearer " 부분을 제외한 실제 토큰 문자열 반환
+        }
+
+        return null;
     }
 }

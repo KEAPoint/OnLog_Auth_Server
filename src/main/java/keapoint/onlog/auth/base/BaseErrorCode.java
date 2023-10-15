@@ -18,6 +18,7 @@ public enum BaseErrorCode {
      * 404 Not Found
      */
     EMAIL_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND.value(), "이메일 정보를 찾을 수 없습니다."),
+    USER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND.value(), "존재하지 않는 유저입니다."),
 
     /**
      * 500 : INTERNAL SERVER ERROR

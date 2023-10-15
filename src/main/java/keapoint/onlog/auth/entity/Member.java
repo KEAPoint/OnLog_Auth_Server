@@ -74,9 +74,17 @@ public class Member {
 
     /**
      * 사용자의 refresh token 갱신
+     *
      * @param refreshToken 리프레시 토큰
      */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    /**
+     * 사용자의 refresh token 파기
+     */
+    public void invalidateRefreshToken() {
+        this.refreshToken = null;
     }
 }
