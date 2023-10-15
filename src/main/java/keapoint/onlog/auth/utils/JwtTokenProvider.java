@@ -32,7 +32,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret-key}")
     private String jwtKey;
 
-    private AES256 aes256;
+    private final AES256 aes256;
 
     @Autowired
     public JwtTokenProvider(AES256 aes256) {
