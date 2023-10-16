@@ -13,5 +13,6 @@ import java.util.UUID;
 public class PostLoginRes {
     @Schema(name = "memberIdx", example = "01234567-8910-abcd-efgh-ijklmnopqrst", requiredProperties = "true", description = "사용자 식별자")
     private UUID memberIdx;
+    private String email;
     private TokensDto tokenInfo;
 }
