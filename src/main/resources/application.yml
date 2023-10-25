@@ -9,7 +9,7 @@ spring:
     on-profile: dev
 
   application:
-    name: OnlogAuthServer
+    name: ONLOG-AUTH-SERVER
 
   jpa:
     hibernate:
@@ -28,7 +28,7 @@ springdoc:
 
 eureka:
   instance:
-    appname: onlog-auth-server
+    appname: ONLOG-AUTH-SERVER
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30
 
