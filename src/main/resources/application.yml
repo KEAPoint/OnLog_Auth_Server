@@ -23,9 +23,6 @@ spring:
 
     show-sql: true
 
-springdoc:
-  show-login-endpoint: true
-
 eureka:
   instance:
     appname: ONLOG-AUTH-SERVER
