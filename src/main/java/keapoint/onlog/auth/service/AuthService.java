@@ -124,6 +124,7 @@ public class AuthService {
             String email;
             if (kakaoAccount.get("has_email").getAsBoolean()) {
                 email = kakaoAccount.get("email").getAsString();
+                log.info("사용자 email: " + email);
 
             } else { // 이메일이 없는 경우 Exception. 이메일이 사용자의 식별자로 사용되고 있기 때문에 무조건 필요함
                 throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
@@ -134,6 +135,7 @@ public class AuthService {
             boolean needProfileImageAgreement = kakaoAccount.get("kakao_account")
                     .getAsJsonObject().get("profile_image_needs_agreement")
                     .getAsBoolean();
+            log.info("사용자 프로필 이미지 동의 여부: " + needProfileImageAgreement);
 
             String profileImgUrl; // 사용자 프로필 이미지 url
             if (needProfileImageAgreement) {
@@ -143,6 +145,7 @@ public class AuthService {
                 profileImgUrl = kakaoAccount.get("kakao_account")
                         .getAsJsonObject().get("profile")
                         .getAsJsonObject().get("profile_image_url").getAsString();
+                log.info("사용자 프로필 이미지 url: " + profileImgUrl);
             }
 
             return SocialAccountUserInfo.builder()
