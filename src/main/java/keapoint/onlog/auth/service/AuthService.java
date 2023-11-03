@@ -132,8 +132,8 @@ public class AuthService {
 
             // 프로필 이미지 권한이 있는 경우 해당 이미지를 사용하고
             // 프로필 이미지 권한이 없는 경우 null로 설정한다.
-            boolean needProfileImageAgreement = kakaoAccount.get("kakao_account")
-                    .getAsJsonObject().get("profile_image_needs_agreement")
+            boolean needProfileImageAgreement = kakaoAccount
+                    .get("profile_image_needs_agreement")
                     .getAsBoolean();
             log.info("사용자 프로필 이미지 동의 여부: " + needProfileImageAgreement);
 
@@ -142,9 +142,11 @@ public class AuthService {
                 profileImgUrl = null;
 
             } else {
-                profileImgUrl = kakaoAccount.get("kakao_account")
-                        .getAsJsonObject().get("profile")
-                        .getAsJsonObject().get("profile_image_url").getAsString();
+                profileImgUrl = kakaoAccount
+                        .get("profile")
+                        .getAsJsonObject()
+                        .get("profile_image_url")
+                        .getAsString();
                 log.info("사용자 프로필 이미지 url: " + profileImgUrl);
             }
 
