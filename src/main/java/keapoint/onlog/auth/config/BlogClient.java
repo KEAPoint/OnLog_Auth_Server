@@ -7,9 +7,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(value = "blogClient", url = "ONLOG-BLOG-SERVER")
+@FeignClient(value = "blogClient", url = "http://ONLOG-BLOG-SERVER/blog")
 public interface BlogClient {
 
-    @PostMapping("/blog")
+    @PostMapping("")
     BaseResponse<BlogDto> createBlog(@RequestBody PostCreateBlogReqDto data);
 }
