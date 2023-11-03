@@ -3,10 +3,12 @@ package keapoint.onlog.auth.service;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import keapoint.onlog.auth.base.*;
+import keapoint.onlog.auth.config.BlogClient;
 import keapoint.onlog.auth.dto.PostLoginRes;
 import keapoint.onlog.auth.dto.PostLogoutRes;
 import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.dto.TokensDto;
+import keapoint.onlog.auth.dto.blog.PostCreateBlogReqDto;
 import keapoint.onlog.auth.entity.Member;
 import keapoint.onlog.auth.repository.MemberRepository;
 import keapoint.onlog.auth.utils.JwtTokenProvider;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -31,6 +34,8 @@ import java.util.UUID;
 @Transactional
 @RequiredArgsConstructor
 public class AuthService {
+
+    private final BlogClient blogClient;
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -158,26 +163,41 @@ public class AuthService {
     /**
      * 로그인 - 소셜 계정
      */
+    @Transactional(rollbackFor = BaseException.class)
     public BaseResponse<PostLoginRes> loginWithSocialAccount(SocialAccountUserInfo data, AccountType type) throws BaseException {
         try {
             // 이메일을 기반으로 사용자를 조회한다
-            // 만약 조회된 결과가 없으면 사용자를 생성하고 DB에 저장한다
-            Member member = memberRepository.findByEmail(data.getUserEmail())
-                    .orElseGet(() -> {
-                        Member newMember = Member.builder()
-                                .email(data.getUserEmail())
-                                .password(passwordEncoder.encode(data.getUserEmail()))
-                                .phoneNumber(null)
-                                .agreePersonalInfo(false)
-                                .agreePromotion(false)
-                                .refreshToken(null)
-                                .role(Role.USER)
-                                .accountType(type)
-                                .userName(data.getUserName())
-                                .build();
+            Optional<Member> memberByEmail = memberRepository.findByEmail(data.getUserEmail());
 
-                        return memberRepository.save(newMember);
-                    });
+            Member member;
+            if (memberByEmail.isEmpty()) { // 사용자 정보가 없는 경우
+                // 사용자를 생성하고
+                Member newMember = Member.builder()
+                        .email(data.getUserEmail())
+                        .password(passwordEncoder.encode(data.getUserEmail()))
+                        .phoneNumber(null)
+                        .agreePersonalInfo(false)
+                        .agreePromotion(false)
+                        .refreshToken(null)
+                        .role(Role.USER)
+                        .accountType(type)
+                        .userName(data.getUserName())
+                        .build();
+
+                // DB에 사용자 정보를 저장한다.
+                member = memberRepository.save(newMember);
+                log.info("생성된 사용자 정보: " + newMember);
+
+                // 생성할 블로그를 만들고
+                PostCreateBlogReqDto newBlog = new PostCreateBlogReqDto(member.getMemberIdx());
+                log.info("생성할 블로그 정보" + newBlog);
+
+                // Blog server에 블로그 생성을 요청한다
+                blogClient.createBlog(newBlog);
+
+            } else { // 사용자 정보가 있는 경우
+                member = memberByEmail.get();
+            }
 
             // --- 로그인 처리 ---
             // 토큰을 발급받고, refresh token을 DB에 저장한다.
