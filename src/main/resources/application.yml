@@ -34,3 +34,9 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://172.16.213.26:8761/eureka
+
+logging:
+  level:
+    root: info
+    ads.client: debug # open feign package 로그를 보기 위함.
+    com.client.external: debug
