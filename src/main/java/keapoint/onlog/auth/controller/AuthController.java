@@ -1,5 +1,6 @@
 package keapoint.onlog.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import keapoint.onlog.auth.base.AccountType;
 import keapoint.onlog.auth.base.BaseResponse;
 import keapoint.onlog.auth.dto.PostLoginRes;
@@ -30,6 +31,7 @@ public class AuthController {
      */
     @ResponseBody
     @RequestMapping("/kakao/login")
+    @Operation(summary = "카카오 계정을 통한 로그인", description = "카카오 계정을 통해서 로그인을 진행합니다.")
     public BaseResponse<PostLoginRes> kakaoCallback(@RequestParam String code) throws Exception {
         // 카카오 인가 코드 로깅
         log.info("kakao auth code = " + code);
@@ -51,9 +53,9 @@ public class AuthController {
      *
      * @param token 사용자 refresh token
      * @return 성공 여부가 들어있는 객체
-     * @throws Exception
      */
     @PostMapping("/logout")
+    @Operation(summary = "블로그 로그아웃", description = "블로그를 로그아웃 합니다.")
     public BaseResponse<PostLogoutRes> userLogout(@RequestHeader("Authorization") String token) throws Exception {
         log.info("logout token(" + token +")");
         return authService.logout(extractToken(token));
