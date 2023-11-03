@@ -8,6 +8,7 @@ import keapoint.onlog.auth.dto.PostLoginRes;
 import keapoint.onlog.auth.dto.PostLogoutRes;
 import keapoint.onlog.auth.dto.SocialAccountUserInfo;
 import keapoint.onlog.auth.dto.TokensDto;
+import keapoint.onlog.auth.dto.blog.BlogDto;
 import keapoint.onlog.auth.dto.blog.PostCreateBlogReqDto;
 import keapoint.onlog.auth.entity.Member;
 import keapoint.onlog.auth.repository.MemberRepository;
@@ -198,7 +199,8 @@ public class AuthService {
                 log.info("생성할 블로그 정보" + newBlog);
 
                 // Blog server에 블로그 생성을 요청한다
-                blogClient.createBlog(newBlog);
+                BaseResponse<BlogDto> res = blogClient.createBlog(newBlog);
+                log.info(res.toString());
 
             } else { // 사용자 정보가 있는 경우
                 member = memberByEmail.get();
