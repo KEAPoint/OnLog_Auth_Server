@@ -14,7 +14,8 @@ public class GlobalExceptionHandler {
     // 의도된 Exception
     @ExceptionHandler(BaseException.class)
     public BaseResponse<BaseErrorCode> handleBaseException(BaseException exception) {
-        log.warn("BaseException. error message: {}", exception.getMessage());
+        log.warn("BaseException. error message: {}", exception.getErrorCode().getMessage());
+        exception.printStackTrace();
         return new BaseResponse<>(exception);
     }
 
