@@ -48,7 +48,6 @@ public class AuthService {
      *
      * @param authCode Kakao auth code
      * @return kakao access token
-     * @throws Exception
      */
     public String getKakaoAccessToken(String authCode) throws Exception {
         try {
@@ -85,7 +84,6 @@ public class AuthService {
      *
      * @param accessToken Kakao access token
      * @return 사용자의 이름과 메일이 들어있는 객체
-     * @throws BaseException
      */
     public SocialAccountUserInfo getKakaoUserInfo(String accessToken) throws BaseException {
         try {
@@ -126,9 +124,26 @@ public class AuthService {
                 throw new BaseException(BaseErrorCode.EMAIL_NOT_FOUND_EXCEPTION);
             }
 
+            // 프로필 이미지 권한이 있는 경우 해당 이미지를 사용하고
+            // 프로필 이미지 권한이 없는 경우 null로 설정한다.
+            boolean needProfileImageAgreement = kakaoAccount.get("kakao_account")
+                    .getAsJsonObject().get("profile_image_needs_agreement")
+                    .getAsBoolean();
+
+            String profileImgUrl; // 사용자 프로필 이미지 url
+            if (needProfileImageAgreement) {
+                profileImgUrl = null;
+
+            } else {
+                profileImgUrl = kakaoAccount.get("kakao_account")
+                        .getAsJsonObject().get("profile")
+                        .getAsJsonObject().get("profile_image_url").getAsString();
+            }
+
             return SocialAccountUserInfo.builder()
                     .userName(username)
                     .userEmail(email)
+                    .profileImgUrl(profileImgUrl)
                     .build();
 
         } catch (BaseException exception) {
@@ -188,7 +203,6 @@ public class AuthService {
      * @param memberIdx   사용자 식별자
      * @param password    사용자 비밀번호
      * @return 토큰이 들어있는 객체
-     * @throws Exception
      */
     public TokensDto generateToken(Object principal, Object credentials, UUID memberIdx, String password) throws Exception {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(principal, credentials);
@@ -201,7 +215,6 @@ public class AuthService {
      *
      * @param token 사용자 token
      * @return 사용자 식별자
-     * @throws Exception
      */
     public BaseResponse<PostLogoutRes> logout(String token) throws BaseException {
         try {
