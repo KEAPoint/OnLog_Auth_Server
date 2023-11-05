@@ -195,7 +195,7 @@ public class AuthService {
                 log.info("생성된 사용자 정보: " + newMember);
 
                 // 생성할 블로그를 만들고
-                PostCreateBlogReqDto newBlog = new PostCreateBlogReqDto(member.getMemberIdx());
+                PostCreateBlogReqDto newBlog = new PostCreateBlogReqDto(member.getMemberIdx(), data.getUserName(), data.getProfileImgUrl());
                 log.info("생성할 블로그 정보" + newBlog);
 
                 // Blog server에 블로그 생성을 요청한다

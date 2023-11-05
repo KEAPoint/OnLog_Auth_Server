@@ -12,9 +12,12 @@ public class PostCreateBlogReqDto {
     private String blogIntro; // 사용자 블로그 한 줄 소개
     private String blogProfileImg; // 사용자 블로그 프로필
 
-    public PostCreateBlogReqDto(UUID blogId) {
+    public PostCreateBlogReqDto(UUID blogId, String name, String blogProfileImg) {
         this.blogId = blogId;
         this.blogNickname = blogId.toString();
+        this.blogName = name;
+        this.blogIntro = name + " 블로그에요~!";
+        this.blogProfileImg = blogProfileImg;
     }
 }
 
