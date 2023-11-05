@@ -214,7 +214,7 @@ public class AuthService {
             // 사용자 정보 로깅
             log.info(member.toString());
 
-            return new BaseResponse<>(new PostLoginRes(member.getMemberIdx(), member.getEmail(), token));
+            return new BaseResponse<>(new PostLoginRes(member.getMemberIdx(), member.getEmail(), data.getProfileImgUrl(), token));
 
         } catch (Exception e) {
             log.error(e.getMessage());
